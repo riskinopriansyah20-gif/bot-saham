@@ -74,4 +74,4 @@ if __name__ == "__main__":
     scan_thread.start()
 
     # Telegram listener tetap aktif
-    bot.infinity_polling(skip_pending=true)
+    bot.infinity_polling(skip_pending=True)
