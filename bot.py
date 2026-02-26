@@ -27,19 +27,24 @@ for ticker in tickers:
     try:
         data = yf.download(ticker, period="1d", interval="5m")
 
-        if data.empty:
-            continue
+if data.empty:
+    continue
 
-        last = data.iloc[-1]
+# 🔒 Proteksi kolom wajib
+required_columns = ['Open', 'Close', 'Volume']
+if not all(col in data.columns for col in required_columns):
+    continue
 
-        open_price = float(last['Open'])
-        close_price = float(last['Close'])
-        volume = int(last['Volume'])
+last = data.iloc[-1]
 
-        if open_price == 0:
-            continue
+try:
+    open_price = float(last['Open'])
+    close_price = float(last['Close'])
+    volume = int(last['Volume'])
+except:
+    continue
 
-        price_change = (close_price - open_price) / open_price * 100
+price_change = (close_price - open_price) / open_price * 100
 
         if price_change > 3:
             message = (
