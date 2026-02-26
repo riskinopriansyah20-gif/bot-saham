@@ -6,12 +6,12 @@ import os
 import pandas as pd
 
 TOKEN = os.getenv("BOT_TOKEN")
-CHAT_ID = os.getenv("CHAT_ID")
-
 bot = telebot.TeleBot(TOKEN)
 
+CHAT_ID = None  # Akan diisi otomatis setelah /start
+
 # ===============================
-# LIST SAHAM (CONTOH)
+# LIST SAHAM
 # ===============================
 tickers = [
     "BBRI.JK","BBCA.JK","TLKM.JK","BMRI.JK","ASII.JK",
@@ -19,11 +19,10 @@ tickers = [
 ]
 
 # ===============================
-# SAFE PRICE EXTRACTOR (ANTI ERROR)
+# SAFE PRICE FUNCTION
 # ===============================
 def get_last_value(data, column_name):
     try:
-        # Jika MultiIndex → ambil level pertama
         if isinstance(data.columns, pd.MultiIndex):
             data.columns = data.columns.get_level_values(0)
 
@@ -36,15 +35,19 @@ def get_last_value(data, column_name):
             return None
 
         return float(value)
-
     except:
         return None
 
 
 # ===============================
-# MARKET SCANNER
+# SCANNER
 # ===============================
 def scan_market():
+    global CHAT_ID
+
+    if CHAT_ID is None:
+        return
+
     print("Scanning market...")
 
     for ticker in tickers:
@@ -61,7 +64,6 @@ def scan_market():
 
             open_price = get_last_value(data, "Open")
             close_price = get_last_value(data, "Close")
-            volume = get_last_value(data, "Volume")
 
             if open_price is None or close_price is None:
                 continue
@@ -71,18 +73,20 @@ def scan_market():
 
             price_change = (close_price - open_price) / open_price * 100
 
-            if True:
+            # TEST MODE MALAM INI (1%)
+            if price_change > 1:
                 message = (
                     f"🔥 {ticker}\n"
-                    f"Change: {round(price_change,2)}%\n"
-                    f"Volume: {int(volume) if volume else 0}"
+                    f"Change: {round(price_change,2)}%"
                 )
 
-                bot.send_message(CHAT_ID, message)
+                try:
+                    bot.send_message(CHAT_ID, message)
+                except Exception as e:
+                    print("Telegram Error:", e)
 
         except Exception as e:
-            print("Error:", ticker, e)
-            continue
+            print("Scan Error:", ticker, e)
 
 
 # ===============================
@@ -92,17 +96,26 @@ def auto_scan():
     while True:
         try:
             scan_market()
-            time.sleep(300)  # 5 menit
+            time.sleep(300)
         except:
             time.sleep(10)
 
 
 # ===============================
-# TELEGRAM COMMAND
+# START COMMAND
 # ===============================
 @bot.message_handler(commands=['start'])
 def start(message):
-    bot.reply_to(message, "Bot Saham Intraday Aktif 🔥")
+    global CHAT_ID
+
+    CHAT_ID = message.chat.id
+
+    bot.reply_to(
+        message,
+        f"Bot Saham Aktif 🔥\nChat ID: {CHAT_ID}\nTest message berhasil."
+    )
+
+    print("CHAT_ID SET:", CHAT_ID)
 
 
 # ===============================
