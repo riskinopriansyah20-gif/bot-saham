@@ -22,30 +22,37 @@ tickers = load_tickers()
 
 def scan_market():
     print("Scanning market...")
-    for ticker in tickers:
-        try:
-            data = yf.download(ticker, period="1d", interval="5m", progress=False)
 
-            if len(data) < 2:
-                continue
+for ticker in tickers:
+    try:
+        data = yf.download(ticker, period="1d", interval="5m")
 
-            last = data.iloc[-1]
-            prev = data.iloc[-2]
+        if data.empty:
+            continue
 
-            price_change = (last["Close"] - prev["Close"]) / prev["Close"] * 100
-            volume_spike = last["Volume"] > prev["Volume"] * 1.5
+        last = data.iloc[-1]
 
-            if price_change > 1 and volume_spike:
-                message = (
-                    f"🚀 {ticker}\n"
-                    f"Price: {round(last['Close'],2)}\n"
-                    f"Change: +{round(price_change,2)}%\n"
-                    f"Volume Spike!"
-                )
-                bot.send_message(CHAT_ID, message)
+        open_price = float(last['Open'])
+        close_price = float(last['Close'])
+        volume = int(last['Volume'])
 
-        except Exception as e:
-            print("Error:", ticker, e)
+        if open_price == 0:
+            continue
+
+        price_change = (close_price - open_price) / open_price * 100
+
+        if price_change > 3:
+            message = (
+                f"{ticker}\n"
+                f"Change: {round(price_change,2)}%\n"
+                f"Volume: {volume}"
+            )
+            bot.send_message(CHAT_ID, message)
+
+    except Exception as e:
+        print("Error:", ticker, e)
+        continue
+
 
 def auto_scan():
     while True:
