@@ -52,6 +52,6 @@ def auto_scan():
 def start(message):
     bot.reply_to(message, "Bot Saham Intraday Aktif 🔥")
 
-if name == "main":
-    print("Scanning market...")
+if __name__ == "__main__":
+    print("Bot Saham Running...")
     auto_scan()
