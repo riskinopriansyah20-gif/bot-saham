@@ -52,6 +52,14 @@ def auto_scan():
 def start(message):
     bot.reply_to(message, "Bot Saham Intraday Aktif 🔥")
 
+import threading
+
 if __name__ == "__main__":
     print("Bot Saham Running...")
-    auto_scan()
+
+    # Jalankan scanner di background thread
+    scan_thread = threading.Thread(target=auto_scan)
+    scan_thread.start()
+
+    # Telegram listener tetap aktif
+    bot.infinity_polling()
