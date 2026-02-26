@@ -124,6 +124,9 @@ def start(message):
 if __name__ == "__main__":
     print("Bot Saham Running...")
 
+    bot.delete_webhook()
+    time.sleep(1)
+
     scan_thread = threading.Thread(target=auto_scan)
     scan_thread.daemon = True
     scan_thread.start()
