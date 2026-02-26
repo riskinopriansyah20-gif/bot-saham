@@ -131,4 +131,9 @@ if __name__ == "__main__":
     scan_thread.daemon = True
     scan_thread.start()
 
-    bot.infinity_polling(skip_pending=True)
+    while True:
+        try:
+            bot.polling(none_stop=True, interval=3, timeout=20)
+        except Exception as e:
+            print("Polling error:", e)
+            time.sleep(5)
