@@ -94,7 +94,7 @@ def start(message):
 # MAIN
 # ==============================
 
-if name == "main":
+if __name__ == "__main__":
     print("Bot Saham Running...")
 
     scan_thread = threading.Thread(target=auto_scan)
