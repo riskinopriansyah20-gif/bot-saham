@@ -53,5 +53,5 @@ def start(message):
     bot.reply_to(message, "Bot Saham Intraday Aktif 🔥")
 
 if name == "main":
-    threading.Thread(target=auto_scan).start()
-    bot.infinity_polling()
+    print("Scanning market...")
+    auto_scan()
