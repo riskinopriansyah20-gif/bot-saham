@@ -3,6 +3,11 @@ import telebot
 import yfinance as yf
 import time
 import threading
+import datetime
+
+def market_open():
+    now = datetime.datetime.now()
+    return now.hour >= 9 and now.hour <= 16
 
 TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
@@ -45,14 +50,21 @@ def scan_market():
 
 def auto_scan():
     while True:
+
+        if not market_open():
+            print("Market closed...")
+            time.sleep(300)
+            continue
+
+        print("Scanning cycle...")
         scan_market()
-        time.sleep(300)  # 5 menit
+
+        time.sleep(300)  # 5 menit delay
 
 @bot.message_handler(commands=['start'])
 def start(message):
     bot.reply_to(message, "Bot Saham Intraday Aktif 🔥")
 
-import threading
 
 if __name__ == "__main__":
     print("Bot Saham Running...")
