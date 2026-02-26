@@ -71,7 +71,7 @@ def scan_market():
 
             price_change = (close_price - open_price) / open_price * 100
 
-            if price_change > 3:
+            if True:
                 message = (
                     f"🔥 {ticker}\n"
                     f"Change: {round(price_change,2)}%\n"
