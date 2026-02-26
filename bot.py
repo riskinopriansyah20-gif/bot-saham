@@ -6,8 +6,7 @@ import threading
 import datetime
 
 def market_open():
-    now = datetime.datetime.now()
-    return now.hour >= 9 and now.hour <= 16
+    return True
 
 TOKEN = os.getenv("BOT_TOKEN")
 CHAT_ID = os.getenv("CHAT_ID")
