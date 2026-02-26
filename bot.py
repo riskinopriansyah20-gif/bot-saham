@@ -48,18 +48,15 @@ def scan_market():
             if not all(col in data.columns for col in required_columns):
                 continue
 
-            last = data.iloc[-1]
-
-            open_price = float(last['Open'])
-            close_price = float(last['Close'])
-            volume = int(last['Volume'])
+            open_price = float(data['Open'].iloc[-1])
+            close_price = float(data['Close'].iloc[-1])
+            volume = int(data['Volume'].iloc[-1])
 
             if open_price == 0:
                 continue
 
             price_change = (close_price - open_price) / open_price * 100
 
-            # === FILTER SINYAL ===
             if price_change > 3:
                 message = (
                     f"🔥 {ticker}\n"
