@@ -1,33 +1,33 @@
 import telebot
 import yfinance as yf
+import pandas as pd
 import threading
 import time
 import os
-import pandas as pd
+from flask import Flask, request
 
 TOKEN = os.getenv("BOT_TOKEN")
 bot = telebot.TeleBot(TOKEN)
 
-CHAT_ID = None  # Akan diisi otomatis setelah /start
+app = Flask(name)
 
-# ===============================
+CHAT_ID = None
+
+# ======================
 # LIST SAHAM
-# ===============================
+# ======================
 tickers = [
     "BBRI.JK","BBCA.JK","TLKM.JK","BMRI.JK","ASII.JK",
     "AMRT.JK","BIPI.JK","PURA.JK","DEWA.JK"
 ]
 
-# ===============================
-# SAFE PRICE FUNCTION
-# ===============================
+# ======================
+# SAFE VALUE
+# ======================
 def get_last_value(data, column_name):
     try:
         if isinstance(data.columns, pd.MultiIndex):
             data.columns = data.columns.get_level_values(0)
-
-        if column_name not in data.columns:
-            return None
 
         value = data[column_name].iloc[-1]
 
@@ -38,10 +38,9 @@ def get_last_value(data, column_name):
     except:
         return None
 
-
-# ===============================
-# SCANNER
-# ===============================
+# ======================
+# SCAN MARKET
+# ======================
 def scan_market():
     global CHAT_ID
 
@@ -68,30 +67,20 @@ def scan_market():
             if open_price is None or close_price is None:
                 continue
 
-            if open_price == 0:
-                continue
+            change = (close_price - open_price) / open_price * 100
 
-            price_change = (close_price - open_price) / open_price * 100
-
-            # TEST MODE MALAM INI (1%)
-            if price_change > 1:
-                message = (
-                    f"🔥 {ticker}\n"
-                    f"Change: {round(price_change,2)}%"
+            if change > 1:
+                bot.send_message(
+                    CHAT_ID,
+                    f"🔥 {ticker}\nChange: {round(change,2)}%"
                 )
 
-                try:
-                    bot.send_message(CHAT_ID, message)
-                except Exception as e:
-                    print("Telegram Error:", e)
-
         except Exception as e:
-            print("Scan Error:", ticker, e)
+            print("Scan error:", ticker, e)
 
-
-# ===============================
+# ======================
 # AUTO LOOP
-# ===============================
+# ======================
 def auto_scan():
     while True:
         try:
@@ -100,40 +89,40 @@ def auto_scan():
         except:
             time.sleep(10)
 
-
-# ===============================
-# START COMMAND
-# ===============================
+# ======================
+# TELEGRAM HANDLER
+# ======================
 @bot.message_handler(commands=['start'])
 def start(message):
     global CHAT_ID
-
     CHAT_ID = message.chat.id
+    bot.reply_to(message, f"Bot Aktif 🔥\nChat ID: {CHAT_ID}")
 
-    bot.reply_to(
-        message,
-        f"Bot Saham Aktif 🔥\nChat ID: {CHAT_ID}\nTest message berhasil."
-    )
+# ======================
+# WEBHOOK ROUTE
+# ======================
+@app.route(f"/{TOKEN}", methods=['POST'])
+def webhook():
+    json_str = request.get_data().decode('UTF-8')
+    update = telebot.types.Update.de_json(json_str)
+    bot.process_new_updates([update])
+    return "OK", 200
 
-    print("CHAT_ID SET:", CHAT_ID)
-
-
-# ===============================
+# ======================
 # MAIN
-# ===============================
+# ======================
 if __name__ == "__main__":
-    print("Bot Saham Running...")
+    print("Bot running in WEBHOOK mode...")
 
-    bot.delete_webhook()
+    bot.remove_webhook()
     time.sleep(1)
+
+    RAILWAY_URL = os.getenv("RAILWAY_STATIC_URL")
+
+    bot.set_webhook(url=f"https://{RAILWAY_URL}/{TOKEN}")
 
     scan_thread = threading.Thread(target=auto_scan)
     scan_thread.daemon = True
     scan_thread.start()
 
-    while True:
-        try:
-            bot.polling(none_stop=True, interval=3, timeout=20)
-        except Exception as e:
-            print("Polling error:", e)
-            time.sleep(5)
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 8080)))
