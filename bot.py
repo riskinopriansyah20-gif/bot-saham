@@ -4,30 +4,31 @@ from flask import Flask, request
 
 app = Flask(__name__)
 
-TOKEN = os.getenv("TOKEN")
+TOKEN = os.environ["TOKEN"]
 
 @app.route("/", methods=["GET"])
 def home():
     return "Bot Saham Webhook Active 🚀", 200
 
-
 @app.route("/webhook", methods=["POST"])
 def webhook():
     data = request.get_json()
     print("INCOMING DATA:", data)
+    print("TOKEN:", TOKEN)
 
     if data and "message" in data:
         chat_id = data["message"]["chat"]["id"]
         text = data["message"].get("text", "")
 
         if text.startswith("/start"):
-            requests.post(
+            r = requests.post(
                 f"https://api.telegram.org/bot{TOKEN}/sendMessage",
                 json={
                     "chat_id": chat_id,
                     "text": "Bot Saham Aktif 🔥\nServer Webhook Running ✅"
                 }
             )
+            print("SEND RESPONSE:", r.text)
 
     return "OK", 200
 
