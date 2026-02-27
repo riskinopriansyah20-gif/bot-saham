@@ -14,12 +14,13 @@ def home():
 @app.route("/webhook", methods=["POST"])
 def webhook():
     data = request.get_json()
+    print("INCOMING DATA:", data)
 
     if data and "message" in data:
         chat_id = data["message"]["chat"]["id"]
         text = data["message"].get("text", "")
 
-        if text == "/start":
+        if text.startswith("/start"):
             requests.post(
                 f"https://api.telegram.org/bot{TOKEN}/sendMessage",
                 json={
